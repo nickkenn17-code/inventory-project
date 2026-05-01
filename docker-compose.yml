@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # 1. The PostgreSQL Database Container
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: inventory_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: inventory_db
+    ports:
+      - "5432:5432"
+    networks:
+      - inventory_network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. The MongoDB Database Container
+  mongo_db:
+    image: mongo:6.0
+    container_name: inventory_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    networks:
+      - inventory_network
+    volumes:
+      - mongo_data:/data/db
+
+  # 3. Your FastAPI Application Container
+  web_app:
+    build: .
+    container_name: inventory_api
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres_db
+      - mongo_db
+    networks:
+      - inventory_network
+    # We override the database URL so the app looks for the container name ('postgres_db') instead of 'localhost'
+    environment:
+      - DATABASE_URL=postgresql://admin:password@postgres_db:5432/inventory_db
+
+# Define the custom network to allow containers to talk to each other
+networks:
+  inventory_network:
+    driver: bridge
+
+# Define volumes so your database data isn't deleted if the containers stop
+volumes:
+  postgres_data:
+  mongo_data:
