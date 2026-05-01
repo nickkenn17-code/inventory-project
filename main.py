@@ -1,13 +1,67 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware  # <-- ADD THIS IMPORT
 from sqlalchemy.orm import Session
 from typing import List
 import models, schemas
 from database import engine, get_db
+from pymongo import MongoClient
+import os
+import datetime
+import asyncio
 
-# This line ensures our database tables are created automatically when the app starts
+# --- SQL Database Setup ---
 models.Base.metadata.create_all(bind=engine)
 
+# --- MongoDB Setup ---
+# Connect to the MongoDB container we defined in docker-compose.yml
+MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
+mongo_client = MongoClient(MONGO_URL)
+mongo_db = mongo_client["inventory_logs"]
+mongo_collection = mongo_db["api_logs"] # Target collection specified in the instructions
+
 app = FastAPI(title="Inventory Management System")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (POST, GET, PUT, DELETE)
+    allow_headers=["*"],  # Allows all headers
+)
+
+# --- Phase 3: MongoDB Logging Middleware ---
+def map_method_to_action(method: str) -> str:
+    """Helper to map HTTP methods to the required action strings."""
+    mapping = {
+        "POST": "ADD_INVENTORY",
+        "GET": "GET/LIST_INVENTORY",
+        "PUT": "EDIT_INVENTORY",
+        "DELETE": "DELETE_INVENTORY"
+    }
+    return mapping.get(method, "UNKNOWN_ACTION")
+
+@app.middleware("http")
+async def log_requests_to_mongo(request: Request, call_next):
+    # Let the API process the request first
+    response = await call_next(request)
+    
+    # We only want to log API calls, not requests for the Swagger UI or favicon
+    if request.url.path.startswith("/item"):
+        # Construct the JSON document required by the instructions
+        log_document = {
+            "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+            "method": request.method,
+            "endpoint": request.url.path,
+            "action": map_method_to_action(request.method),
+            "user_agent": request.headers.get("user-agent", "Unknown")
+        }
+        
+        # Asynchronously insert the document so it does not block the API response
+        asyncio.create_task(asyncio.to_thread(mongo_collection.insert_one, log_document))
+        
+    return response
+
+# --- Phase 1: Core API Endpoints ---
 
 # 1. Create: POST /item 
 @app.post("/item", response_model=schemas.ItemResponse)

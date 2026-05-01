@@ -41,9 +41,9 @@ services:
       - mongo_db
     networks:
       - inventory_network
-    # We override the database URL so the app looks for the container name ('postgres_db') instead of 'localhost'
     environment:
       - DATABASE_URL=postgresql://admin:password@postgres_db:5432/inventory_db
+      - MONGO_URL=mongodb://mongo_db:27017
 
 # Define the custom network to allow containers to talk to each other
 networks:
