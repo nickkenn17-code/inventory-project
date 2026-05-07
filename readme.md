@@ -21,3 +21,7 @@ Check Database MongoDB:
     - use inventory_logs
     - db.api_logs.find().pretty()
     - exit
+
+
+
+View the Database in easier way: http://localhost:8000/docs
