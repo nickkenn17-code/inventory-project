@@ -1,4 +1,5 @@
 How to open the program:
+
     - cd path\to\inventory_project
 
     - docker-compose up
@@ -9,6 +10,7 @@ How to open the program:
 
 
 Check Logs Postgre:
+
     - docker exec -it inventory_postgres psql -U admin -d inventory_db
     - \dt
     - SELECT * FROM inventory_items;
@@ -17,6 +19,7 @@ Check Logs Postgre:
 
 
 Check Database MongoDB:
+
     - docker exec -it inventory_mongo mongosh
     - use inventory_logs
     - db.api_logs.find().pretty()
