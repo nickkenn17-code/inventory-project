@@ -1,15 +1,15 @@
-How to open the program:
+##How to open the program:
+'''bash
+    cd path\to\inventory_project
 
-    - cd path\to\inventory_project
+    docker-compose up
+    docker-compose down
 
-    - docker-compose up
-    - docker-compose down
-
-    - open the index.html file
-
+    open the index.html file
+'''
 
 
-Check Database Postgre:
+##Check Database Postgre:
 
     - docker exec -it inventory_postgres psql -U admin -d inventory_db
     - \dt
@@ -18,7 +18,7 @@ Check Database Postgre:
 
 
 
-Check Logs MongoDB:
+##Check Logs MongoDB:
 
     - docker exec -it inventory_mongo mongosh
     - use inventory_logs
