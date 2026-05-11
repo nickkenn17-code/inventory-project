@@ -9,7 +9,7 @@ How to open the program:
 
 
 
-Check Logs Postgre:
+Check Database Postgre:
 
     - docker exec -it inventory_postgres psql -U admin -d inventory_db
     - \dt
@@ -18,7 +18,7 @@ Check Logs Postgre:
 
 
 
-Check Database MongoDB:
+Check Logs MongoDB:
 
     - docker exec -it inventory_mongo mongosh
     - use inventory_logs
